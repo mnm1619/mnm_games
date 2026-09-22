@@ -15,7 +15,7 @@ button { font: inherit; }
   width: min(100%, 980px);
   min-height: 100vh;
   margin: 0 auto;
-  padding: 28px clamp(18px, 5vw, 56px) 44px;
+  padding: 20px clamp(18px, 4vw, 44px) 28px;
 }
 
 .topbar { display: flex; justify-content: space-between; gap: 24px; align-items: end; }
@@ -26,10 +26,10 @@ h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.7rem); line-height: 1.15; }
 .stats span, .stats small { display: block; font-size: 0.72rem; }
 .stats strong { display: inline-block; margin-top: 1px; color: #c85d87; font: 800 1.45rem sans-serif; }
 
-.stage-wrap { margin: 24px 0 0; overflow: hidden; border: 3px solid #5f4662; border-radius: 22px 22px 8px 8px; background: #f9e8f0; }
-.scene { display: block; width: 100%; height: 220px; }
+.stage-wrap { margin: 18px 0 0; overflow: hidden; border: 3px solid #5f4662; border-radius: 22px 22px 8px 8px; background: #f9e8f0; box-shadow: 0 8px 0 rgba(95, 70, 98, 0.12); }
+.scene { display: block; width: 100%; height: 300px; }
 
-.typing-panel { margin-top: -2px; padding: 28px 18px 34px; border: 3px solid #5f4662; border-top: 0; border-radius: 0 0 22px 22px; background: #fffafd; text-align: center; }
+.typing-panel { margin-top: -2px; padding: 18px 18px 24px; border: 3px solid #5f4662; border-top: 0; border-radius: 0 0 22px 22px; background: #fffafd; text-align: center; }
 .message { min-height: 1.6em; margin: 0 0 16px; color: #75655c; font-size: 0.95rem; }
 .mode-choice { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 9px; margin: 0 auto 10px; color: #75655c; font-size: 0.86rem; }
 .mode-choice select { padding: 7px 28px 7px 10px; border: 2px solid #d9c4ec; border-radius: 8px; color: #473b35; background: #fff; font: inherit; cursor: pointer; }
@@ -62,5 +62,5 @@ h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.7rem); line-height: 1.15; }
   .topbar { display: block; }
   .stats { margin-top: 18px; }
   .stats div { flex: 1; }
-  .scene { height: 170px; }
+  .scene { height: 230px; }
 }

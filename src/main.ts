@@ -1,7 +1,7 @@
 import './style.css'
 import { allKeySteps, difficultySettings, homePositionSteps, sugarGliderQuestionPool, type Difficulty, type TypingQuestion } from './questions'
 
-type GameStatus = 'ready' | 'playing' | 'finished'
+type GameStatus = 'ready' | 'countdown' | 'playing' | 'finished'
 type GameMode = 'story' | 'practice' | 'learn' | 'learn-all'
 type ScoreRecords = Partial<Record<Difficulty, number>>
 type SugarGliderMorph = {
@@ -136,6 +136,8 @@ let feedbackText = ''
 let feedbackKind: 'success' | 'miss' = 'success'
 let sceneTime = 0
 let effectParticles: EffectParticle[] = []
+let countdown = 0
+let countdownUntil = 0
 
 modeElement.value = mode
 
@@ -433,6 +435,31 @@ function drawMonster(x: number, y: number) {
   context.stroke()
 }
 
+function drawAdventureDecor(width: number, height: number) {
+  context.fillStyle = '#d8bfdc'
+  context.beginPath()
+  context.arc(width * 0.1, height * 0.63, 42, Math.PI, 0)
+  context.arc(width * 0.19, height * 0.63, 58, Math.PI, 0)
+  context.arc(width * 0.88, height * 0.62, 48, Math.PI, 0)
+  context.fill()
+  context.fillStyle = '#f6c7d8'
+  context.beginPath()
+  context.arc(width * 0.78, height * 0.18, 25, 0, Math.PI * 2)
+  context.fill()
+  context.fillStyle = '#fff5ba'
+  context.beginPath()
+  context.arc(width * 0.77, height * 0.17, 21, 0, Math.PI * 2)
+  context.fill()
+  drawSparkle(width * 0.66, height * 0.18, 7, '#fff6c7')
+  drawSparkle(width * 0.91, height * 0.28, 5, '#fff6c7')
+  context.fillStyle = '#c68eaa'
+  context.beginPath()
+  context.arc(width * 0.28, height * 0.65, 5, 0, Math.PI * 2)
+  context.arc(width * 0.3, height * 0.6, 5, 0, Math.PI * 2)
+  context.arc(width * 0.32, height * 0.65, 5, 0, Math.PI * 2)
+  context.fill()
+}
+
 function drawScene() {
   const width = canvas.clientWidth
   const height = canvas.clientHeight
@@ -449,6 +476,7 @@ function drawScene() {
   context.fill()
   context.fillStyle = '#f8dce5'
   context.fillRect(0, height * 0.72, width, height * 0.28)
+  drawAdventureDecor(width, height)
   context.strokeStyle = '#d89db9'
   context.lineWidth = 4
   context.beginPath()
@@ -464,8 +492,22 @@ function drawScene() {
     drawSparkle(petalX, petalY, 4 + (index % 2) * 2, '#fff7fc')
   }
 
-  const characterY = height * 0.66 + Math.sin(sceneTime / 420) * 2
+  const characterY = height * 0.76 + Math.sin(sceneTime / 420) * 2
   drawHeroine(characterX, characterY)
+
+  context.strokeStyle = '#fff4c9'
+  context.lineWidth = 6
+  context.beginPath()
+  context.moveTo(30, height * 0.86)
+  context.lineTo(width - 30, height * 0.86)
+  context.stroke()
+  for (let index = 0; index < 6; index += 1) {
+    const markerX = 42 + index * ((width - 84) / 5)
+    context.fillStyle = index <= Math.round(progress * 5) ? '#d86691' : '#efd1df'
+    context.beginPath()
+    context.arc(markerX, height * 0.86, 7, 0, Math.PI * 2)
+    context.fill()
+  }
 
   if (feedbackTime > 0) {
     feedbackTime = Math.max(0, feedbackTime - 0.04)
@@ -541,6 +583,18 @@ function drawScene() {
       context.fillText('✦', sparkleX - 8, sparkleY)
     }
   }
+
+  if (status === 'countdown') {
+    context.fillStyle = 'rgba(95, 70, 98, 0.28)'
+    context.fillRect(0, 0, width, height)
+    context.fillStyle = '#fffafd'
+    context.font = '800 76px sans-serif'
+    context.textAlign = 'center'
+    context.fillText(String(countdown), width / 2, height / 2 + 25)
+    context.font = '700 18px sans-serif'
+    context.fillText('モモのぼうけん、スタート！', width / 2, height / 2 + 58)
+    context.textAlign = 'start'
+  }
 }
 
 function updateWord() {
@@ -592,7 +646,7 @@ function startGame() {
   difficulty = difficultyElement.value as Difficulty
   audioContext ??= new AudioContext()
   void audioContext.resume()
-  status = 'playing'
+  status = 'countdown'
   wordIndex = 0
   lessonIndex = 0
   learningSteps = mode === 'learn' && difficulty === 'normal'
@@ -605,11 +659,20 @@ function startGame() {
   if (!isLearningMode()) chooseQuestions()
   chooseRandomMorph()
   remaining = isLearningMode() ? 180 : difficultySettings[difficulty].time
+  countdown = 3
+  countdownUntil = performance.now() + 3000
+  window.setTimeout(() => {
+    if (status !== 'countdown') return
+    status = 'playing'
+    lastFrame = performance.now()
+    startButton.textContent = 'プレイ中'
+    messageElement.textContent = mode === 'story' ? getStorySetting().goal : 'ひらがなを見て、ローマ字を入力しよう！'
+  }, 3000)
   lastFrame = performance.now()
   startButton.disabled = true
   modeElement.disabled = true
   difficultyElement.disabled = true
-  startButton.textContent = 'プレイ中'
+  startButton.textContent = 'じゅんび中'
   messageElement.textContent = 'ひらがなを見て、ローマ字を入力しよう！'
   if (mode === 'story') messageElement.textContent = '星の魔法で、じゃまモンスターを追いはらおう！'
   if (mode === 'learn' && difficulty === 'easy') messageElement.textContent = '指をホームポジションに置いて、光るキーを押そう！'
@@ -689,6 +752,16 @@ function handleKeydown(event: KeyboardEvent) {
 
 function tick(now: number) {
   sceneTime = now
+  if (status === 'countdown') {
+    const nextCountdown = Math.ceil((countdownUntil - now) / 1000)
+    countdown = Math.max(0, nextCountdown)
+    if (countdown <= 0) {
+      status = 'playing'
+      lastFrame = now
+      startButton.textContent = 'プレイ中'
+      messageElement.textContent = mode === 'story' ? getStorySetting().goal : 'ひらがなを見て、ローマ字を入力しよう！'
+    }
+  }
   if (status === 'playing' && now - lastFrame >= 1000) {
     remaining -= 1
     lastFrame = now
