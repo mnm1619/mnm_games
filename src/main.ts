@@ -1,5 +1,5 @@
 import './style.css'
-import { allKeySteps, difficultySettings, homePositionSteps, type Difficulty } from './questions'
+import { allKeySteps, difficultySettings, homePositionSteps, sugarGliderQuestionPool, type Difficulty, type TypingQuestion } from './questions'
 
 type GameStatus = 'ready' | 'playing' | 'finished'
 type GameMode = 'story' | 'practice' | 'learn' | 'learn-all'
@@ -109,6 +109,7 @@ let difficulty: Difficulty = 'normal'
 let wordIndex = 0
 let lessonIndex = 0
 let learningSteps = homePositionSteps
+let currentQuestions: TypingQuestion[] = difficultySettings[difficulty].questions
 let currentMorph = sugarGliderMorphs[0]
 let inputIndex = 0
 let score = 0
@@ -129,7 +130,7 @@ function chooseRandomMorph() {
 }
 
 function getQuestions() {
-  return difficultySettings[difficulty].questions
+  return currentQuestions
 }
 
 function isLearningMode() {
@@ -142,6 +143,20 @@ function getLearningSteps() {
 
 function shuffledSteps(steps: typeof homePositionSteps) {
   return [...steps].sort(() => Math.random() - 0.5)
+}
+
+function shuffledQuestions(questions: TypingQuestion[]) {
+  return [...questions].sort(() => Math.random() - 0.5)
+}
+
+function chooseQuestions() {
+  const pool = difficulty === 'easy'
+    ? difficultySettings.easy.questions
+    : difficulty === 'hard'
+      ? sugarGliderQuestionPool.filter((question) => question.romaji.length >= 10)
+      : sugarGliderQuestionPool
+  const questionCount = difficulty === 'easy' ? 4 : 10
+  currentQuestions = shuffledQuestions(pool).slice(0, questionCount)
 }
 
 function getScoreRecords(): ScoreRecords {
@@ -499,6 +514,7 @@ function startGame() {
   inputIndex = 0
   score = 0
   misses = 0
+  if (!isLearningMode()) chooseQuestions()
   chooseRandomMorph()
   remaining = isLearningMode() ? 180 : difficultySettings[difficulty].time
   lastFrame = performance.now()
@@ -611,6 +627,7 @@ difficultyElement.addEventListener('change', () => {
   if (status === 'playing') return
   difficulty = difficultyElement.value as Difficulty
   remaining = difficultySettings[difficulty].time
+  if (!isLearningMode()) chooseQuestions()
   learnGuide.hidden = !isLearningMode()
   updateWord()
   updateBestScore()
