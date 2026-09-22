@@ -124,6 +124,7 @@ let effectY = 0
 let feedbackTime = 0
 let feedbackText = ''
 let feedbackKind: 'success' | 'miss' = 'success'
+let sceneTime = 0
 
 modeElement.value = mode
 
@@ -266,13 +267,13 @@ function drawHeroine(x: number, y: number) {
   context.lineWidth = 10
   context.beginPath()
   context.moveTo(x + 20, y + 12)
-  context.bezierCurveTo(x + 50, y + 32, x + 67, y + 5, x + 53, y - 18)
+  context.bezierCurveTo(x + 50, y + 32, x + 67, y + 5 + Math.sin(sceneTime / 280) * 4, x + 53, y - 18)
   context.stroke()
   context.strokeStyle = '#fff3e9'
   context.lineWidth = 4
   context.beginPath()
   context.moveTo(x + 20, y + 12)
-  context.bezierCurveTo(x + 50, y + 32, x + 67, y + 5, x + 53, y - 18)
+  context.bezierCurveTo(x + 50, y + 32, x + 67, y + 5 + Math.sin(sceneTime / 280) * 4, x + 53, y - 18)
   context.stroke()
 
   context.fillStyle = currentMorph.fur
@@ -436,7 +437,7 @@ function drawScene() {
     drawSparkle(petalX, petalY, 4 + (index % 2) * 2, '#fff7fc')
   }
 
-  const characterY = height * 0.66
+  const characterY = height * 0.66 + Math.sin(sceneTime / 420) * 2
   drawHeroine(characterX, characterY)
 
   if (feedbackTime > 0) {
@@ -461,9 +462,17 @@ function drawScene() {
     if (feedbackKind === 'success') {
       drawSparkle(feedbackX + 45, feedbackY - 17, 5, '#f0b64f')
     } else {
-      context.fillStyle = '#8c73c9'
+      const tearProgress = 1 - feedbackTime
+      const tearY = characterY - 12 + tearProgress * 30
+      context.fillStyle = '#91b9df'
       context.beginPath()
-      context.arc(feedbackX + 42, feedbackY - 15, 3, 0, Math.PI * 2)
+      context.ellipse(characterX - 8, tearY, 3.5, 6, -0.25, 0, Math.PI * 2)
+      context.ellipse(characterX + 8, tearY + 3, 3.5, 6, 0.25, 0, Math.PI * 2)
+      context.fill()
+      context.fillStyle = 'rgba(255, 255, 255, 0.8)'
+      context.beginPath()
+      context.arc(characterX - 9, tearY - 2, 1.2, 0, Math.PI * 2)
+      context.arc(characterX + 7, tearY + 1, 1.2, 0, Math.PI * 2)
       context.fill()
     }
     context.globalAlpha = 1
@@ -638,6 +647,7 @@ function handleKeydown(event: KeyboardEvent) {
 }
 
 function tick(now: number) {
+  sceneTime = now
   if (status === 'playing' && now - lastFrame >= 1000) {
     remaining -= 1
     lastFrame = now
