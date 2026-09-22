@@ -4,9 +4,22 @@ import { allKeySteps, difficultySettings, homePositionSteps, type Difficulty } f
 type GameStatus = 'ready' | 'playing' | 'finished'
 type GameMode = 'story' | 'practice' | 'learn' | 'learn-all'
 type ScoreRecords = Partial<Record<Difficulty, number>>
+type SugarGliderMorph = {
+  name: string
+  fur: string
+  ear: string
+  belly: string
+  membrane: string
+}
 
 const scoreStorageKey = 'mnm-games-best-scores'
 const modeStorageKey = 'mnm-games-mode'
+const sugarGliderMorphs: SugarGliderMorph[] = [
+  { name: 'スノーモモ', fur: '#fff8ef', ear: '#f3c2c4', belly: '#fffdf8', membrane: '#ffe0e6' },
+  { name: 'ミルクモモ', fur: '#f3e5cf', ear: '#e8b9aa', belly: '#fff9ed', membrane: '#f8d9cf' },
+  { name: 'グレーモモ', fur: '#b7a9a3', ear: '#d4aeb1', belly: '#eee7e3', membrane: '#ead4df' },
+  { name: 'モザイクモモ', fur: '#e8d9d0', ear: '#e7b9bd', belly: '#fff8f2', membrane: '#f7d9e4' },
+]
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 const canvas = document.createElement('canvas')
@@ -38,6 +51,7 @@ app.innerHTML = `
           <option value="learn-all">ぜんぶのキー</option>
         </select>
         <span id="story-progress" class="story-progress">第1章 ほしの森</span>
+        <span id="morph-label" class="morph-label">モモ: スノーモモ</span>
       </div>
       <div class="difficulty-choice">
         <span>むずかしさ</span>
@@ -83,6 +97,7 @@ const modeElement = document.querySelector<HTMLSelectElement>('#mode')!
 const difficultyElement = document.querySelector<HTMLSelectElement>('#difficulty')!
 const bestScoreElement = document.querySelector<HTMLSpanElement>('#best-score')!
 const storyProgressElement = document.querySelector<HTMLSpanElement>('#story-progress')!
+const morphLabelElement = document.querySelector<HTMLSpanElement>('#morph-label')!
 const learnGuide = document.querySelector<HTMLElement>('#learn-guide')!
 const lessonTitle = document.querySelector<HTMLParagraphElement>('#lesson-title')!
 const lessonFinger = document.querySelector<HTMLParagraphElement>('#lesson-finger')!
@@ -94,6 +109,7 @@ let difficulty: Difficulty = 'normal'
 let wordIndex = 0
 let lessonIndex = 0
 let learningSteps = homePositionSteps
+let currentMorph = sugarGliderMorphs[0]
 let inputIndex = 0
 let score = 0
 let misses = 0
@@ -106,6 +122,11 @@ let effectX = 0
 let effectY = 0
 
 modeElement.value = mode
+
+function chooseRandomMorph() {
+  currentMorph = sugarGliderMorphs[Math.floor(Math.random() * sugarGliderMorphs.length)]
+  morphLabelElement.textContent = `モモ: ${currentMorph.name}`
+}
 
 function getQuestions() {
   return difficultySettings[difficulty].questions
@@ -230,12 +251,12 @@ function drawHeroine(x: number, y: number) {
   context.bezierCurveTo(x + 50, y + 32, x + 67, y + 5, x + 53, y - 18)
   context.stroke()
 
-  context.fillStyle = '#fff8ef'
+  context.fillStyle = currentMorph.fur
   context.beginPath()
   context.ellipse(x, y + 1, 27, 31, 0, 0, Math.PI * 2)
   context.fill()
 
-  context.fillStyle = '#f3c2c4'
+  context.fillStyle = currentMorph.ear
   context.beginPath()
   context.moveTo(x - 22, y - 29)
   context.quadraticCurveTo(x - 42, y - 58, x - 25, y - 63)
@@ -245,7 +266,7 @@ function drawHeroine(x: number, y: number) {
   context.quadraticCurveTo(x + 9, y - 51, x + 10, y - 27)
   context.fill()
 
-  context.fillStyle = '#fffaf4'
+  context.fillStyle = currentMorph.belly
   context.beginPath()
   context.ellipse(x, y - 10, 20, 22, 0, 0, Math.PI * 2)
   context.fill()
@@ -291,7 +312,8 @@ function drawHeroine(x: number, y: number) {
   context.lineTo(x + 25, y + 5)
   context.stroke()
 
-  context.fillStyle = 'rgba(255, 224, 230, 0.76)'
+  context.fillStyle = currentMorph.membrane
+  context.globalAlpha = 0.76
   context.beginPath()
   context.moveTo(x - 21, y + 5)
   context.quadraticCurveTo(x - 48, y + 9, x - 43, y + 29)
@@ -301,6 +323,7 @@ function drawHeroine(x: number, y: number) {
   context.quadraticCurveTo(x + 25, y + 31, x + 11, y + 16)
   context.closePath()
   context.fill()
+  context.globalAlpha = 1
 
   context.fillStyle = '#fffdf8'
   context.beginPath()
@@ -476,6 +499,7 @@ function startGame() {
   inputIndex = 0
   score = 0
   misses = 0
+  chooseRandomMorph()
   remaining = isLearningMode() ? 180 : difficultySettings[difficulty].time
   lastFrame = performance.now()
   startButton.disabled = true
@@ -598,6 +622,7 @@ updateWord()
 updateStats()
 updateBestScore()
 updateStorySetting()
+chooseRandomMorph()
 drawScene()
 timer = requestAnimationFrame(tick)
 
