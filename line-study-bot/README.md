@@ -18,6 +18,8 @@
 | --- | --- | --- | --- | --- |
 | 2026-09-23 | 算数 | 3×4はいくつ？ A 7 / B 12 / C 14 | B | 3を4回たすと12です。 |
 
+入力例は`templates/Questions.csv`、空の利用者シートは`templates/Users.csv`にあります。Googleスプレッドシートでは、それぞれを別シートにインポートしてください。
+
 ## Apps Script設定
 
 1. GoogleスプレッドシートからApps Scriptを開く
