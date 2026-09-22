@@ -92,6 +92,7 @@ let mode: GameMode = (localStorage.getItem(modeStorageKey) as GameMode) || 'stor
 let difficulty: Difficulty = 'normal'
 let wordIndex = 0
 let lessonIndex = 0
+let learningSteps = homePositionSteps
 let inputIndex = 0
 let score = 0
 let misses = 0
@@ -110,11 +111,15 @@ function getQuestions() {
 }
 
 function isLearningMode() {
-  return mode === 'learn' || mode === 'learn-all'
+  return (mode === 'learn' || mode === 'learn-all') && !(mode === 'learn' && difficulty === 'hard')
 }
 
 function getLearningSteps() {
-  return mode === 'learn-all' ? allKeySteps : homePositionSteps
+  return learningSteps
+}
+
+function shuffledSteps(steps: typeof homePositionSteps) {
+  return [...steps].sort(() => Math.random() - 0.5)
 }
 
 function getScoreRecords(): ScoreRecords {
@@ -389,6 +394,10 @@ function startGame() {
   status = 'playing'
   wordIndex = 0
   lessonIndex = 0
+  learningSteps = mode === 'learn' && difficulty === 'normal'
+    ? shuffledSteps(allKeySteps)
+    : mode === 'learn' ? shuffledSteps(homePositionSteps)
+      : mode === 'learn-all' ? shuffledSteps(allKeySteps) : allKeySteps
   inputIndex = 0
   score = 0
   misses = 0
@@ -400,7 +409,8 @@ function startGame() {
   startButton.textContent = 'プレイ中'
   messageElement.textContent = 'ひらがなを見て、ローマ字を入力しよう！'
   if (mode === 'story') messageElement.textContent = '星の魔法で、じゃまモンスターを追いはらおう！'
-  if (mode === 'learn') messageElement.textContent = '指をホームポジションに置いて、光るキーを押そう！'
+  if (mode === 'learn' && difficulty === 'easy') messageElement.textContent = '指をホームポジションに置いて、光るキーを押そう！'
+  if (mode === 'learn' && difficulty === 'normal') messageElement.textContent = '全キーからランダムに出題！ 指を動かして押そう！'
   if (mode === 'learn-all') messageElement.textContent = 'ホームポジションから指を動かして、光るキーを押そう！'
   learnGuide.hidden = !isLearningMode()
   updateWord()
@@ -492,6 +502,8 @@ difficultyElement.addEventListener('change', () => {
   if (status === 'playing') return
   difficulty = difficultyElement.value as Difficulty
   remaining = difficultySettings[difficulty].time
+  learnGuide.hidden = !isLearningMode()
+  updateWord()
   updateBestScore()
   updateStats()
 })
