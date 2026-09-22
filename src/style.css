@@ -1,0 +1,50 @@
+:root {
+  color: #473b35;
+  background: #f6f0df;
+  font-family: 'Hiragino Maru Gothic ProN', 'Yu Gothic', sans-serif;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; min-width: 320px; }
+
+button { font: inherit; }
+
+.game-shell {
+  width: min(100%, 980px);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 28px clamp(18px, 5vw, 56px) 44px;
+}
+
+.topbar { display: flex; justify-content: space-between; gap: 24px; align-items: end; }
+.eyebrow { margin: 0 0 7px; color: #d96750; font: 800 0.76rem sans-serif; letter-spacing: 0.08em; }
+h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.7rem); line-height: 1.15; }
+.stats { display: flex; gap: 10px; }
+.stats div { min-width: 66px; padding: 8px 10px; border: 2px solid #e7d9bd; border-radius: 12px; background: #fffaf0; text-align: center; }
+.stats span, .stats small { display: block; font-size: 0.72rem; }
+.stats strong { display: inline-block; margin-top: 1px; color: #d96750; font: 800 1.45rem sans-serif; }
+
+.stage-wrap { margin: 24px 0 0; overflow: hidden; border: 3px solid #473b35; border-radius: 22px 22px 8px 8px; background: #dff0e7; }
+.scene { display: block; width: 100%; height: 220px; }
+
+.typing-panel { margin-top: -2px; padding: 28px 18px 34px; border: 3px solid #473b35; border-top: 0; border-radius: 0 0 22px 22px; background: #fffaf0; text-align: center; }
+.message { min-height: 1.6em; margin: 0 0 16px; color: #75655c; font-size: 0.95rem; }
+.word-card { width: min(100%, 520px); margin: 0 auto; padding: 15px 20px 20px; border: 2px solid #e7d9bd; border-radius: 14px; background: #fff; }
+.kana { margin: 0; color: #d96750; font-size: 1.35rem; font-weight: 700; }
+.target { margin: 4px 0 0; color: #473b35; font: 800 clamp(2.1rem, 7vw, 3.8rem) sans-serif; letter-spacing: 0.08em; }
+.target span { color: #b8aa9e; }
+.target span.typed { color: #5aaf7d; }
+.input-help { margin: 15px 0 20px; color: #75655c; font-size: 0.86rem; }
+.start-button { min-width: 190px; padding: 12px 22px; border: 0; border-radius: 999px; color: #fffaf0; background: #d96750; box-shadow: 0 4px 0 #a8493b; cursor: pointer; font-weight: 700; }
+.start-button:hover:not(:disabled) { background: #c95642; }
+.start-button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #a8493b; }
+.start-button:disabled { background: #b8aa9e; box-shadow: 0 4px 0 #95877e; cursor: default; }
+
+@media (max-width: 620px) {
+  .topbar { display: block; }
+  .stats { margin-top: 18px; }
+  .stats div { flex: 1; }
+  .scene { height: 170px; }
+}
