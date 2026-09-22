@@ -217,25 +217,25 @@ function drawHeroine(x: number, y: number) {
   context.lineCap = 'round'
   context.lineJoin = 'round'
 
-  context.strokeStyle = '#8b685c'
-  context.lineWidth = 9
+  context.strokeStyle = '#f0dfd4'
+  context.lineWidth = 10
   context.beginPath()
   context.moveTo(x + 20, y + 12)
   context.bezierCurveTo(x + 50, y + 32, x + 67, y + 5, x + 53, y - 18)
   context.stroke()
-  context.strokeStyle = '#c69b88'
+  context.strokeStyle = '#fff3e9'
   context.lineWidth = 4
   context.beginPath()
   context.moveTo(x + 20, y + 12)
   context.bezierCurveTo(x + 50, y + 32, x + 67, y + 5, x + 53, y - 18)
   context.stroke()
 
-  context.fillStyle = '#8d6b5f'
+  context.fillStyle = '#fff8ef'
   context.beginPath()
   context.ellipse(x, y + 1, 27, 31, 0, 0, Math.PI * 2)
   context.fill()
 
-  context.fillStyle = '#d6aa96'
+  context.fillStyle = '#f3c2c4'
   context.beginPath()
   context.moveTo(x - 22, y - 29)
   context.quadraticCurveTo(x - 42, y - 58, x - 25, y - 63)
@@ -245,36 +245,53 @@ function drawHeroine(x: number, y: number) {
   context.quadraticCurveTo(x + 9, y - 51, x + 10, y - 27)
   context.fill()
 
-  context.fillStyle = '#f1d7c9'
+  context.fillStyle = '#fffaf4'
   context.beginPath()
   context.ellipse(x, y - 10, 20, 22, 0, 0, Math.PI * 2)
   context.fill()
 
-  context.strokeStyle = '#60463f'
-  context.lineWidth = 3
+  context.strokeStyle = '#e8d4ca'
+  context.lineWidth = 2
   context.beginPath()
   context.moveTo(x, y - 34)
   context.lineTo(x, y + 20)
   context.stroke()
 
-  context.fillStyle = '#473b35'
+  context.fillStyle = '#17151c'
   context.beginPath()
-  context.ellipse(x - 8, y - 13, 5, 7, 0, 0, Math.PI * 2)
-  context.ellipse(x + 8, y - 13, 5, 7, 0, 0, Math.PI * 2)
+  context.ellipse(x - 8, y - 13, 6, 9, 0, 0, Math.PI * 2)
+  context.ellipse(x + 8, y - 13, 6, 9, 0, 0, Math.PI * 2)
   context.fill()
   context.fillStyle = '#fff'
   context.beginPath()
-  context.arc(x - 6, y - 15, 2, 0, Math.PI * 2)
-  context.arc(x + 10, y - 15, 2, 0, Math.PI * 2)
+  context.arc(x - 6, y - 17, 2.5, 0, Math.PI * 2)
+  context.arc(x + 10, y - 17, 2.5, 0, Math.PI * 2)
   context.fill()
 
-  context.strokeStyle = '#9c5d65'
+  context.fillStyle = '#ef9daa'
+  context.beginPath()
+  context.ellipse(x, y - 3, 5, 4, 0, 0, Math.PI * 2)
+  context.fill()
+  context.strokeStyle = '#b96f7a'
   context.lineWidth = 2
   context.beginPath()
-  context.arc(x, y - 5, 6, 0.2, Math.PI - 0.2)
+  context.arc(x, y + 1, 5, 0.2, Math.PI - 0.2)
   context.stroke()
 
-  context.fillStyle = 'rgba(244, 205, 222, 0.82)'
+  context.strokeStyle = 'rgba(174, 135, 132, 0.7)'
+  context.lineWidth = 1
+  context.beginPath()
+  context.moveTo(x - 4, y - 1)
+  context.lineTo(x - 25, y - 5)
+  context.moveTo(x - 4, y + 2)
+  context.lineTo(x - 25, y + 5)
+  context.moveTo(x + 4, y - 1)
+  context.lineTo(x + 25, y - 5)
+  context.moveTo(x + 4, y + 2)
+  context.lineTo(x + 25, y + 5)
+  context.stroke()
+
+  context.fillStyle = 'rgba(255, 224, 230, 0.76)'
   context.beginPath()
   context.moveTo(x - 21, y + 5)
   context.quadraticCurveTo(x - 48, y + 9, x - 43, y + 29)
@@ -285,7 +302,7 @@ function drawHeroine(x: number, y: number) {
   context.closePath()
   context.fill()
 
-  context.fillStyle = '#ead0c0'
+  context.fillStyle = '#fffdf8'
   context.beginPath()
   context.ellipse(x, y + 10, 15, 20, 0, 0, Math.PI * 2)
   context.fill()
