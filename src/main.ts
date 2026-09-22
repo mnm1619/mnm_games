@@ -11,6 +11,16 @@ type SugarGliderMorph = {
   belly: string
   membrane: string
 }
+type EffectParticle = {
+  x: number
+  y: number
+  velocityX: number
+  velocityY: number
+  life: number
+  size: number
+  symbol: string
+  color: string
+}
 
 const scoreStorageKey = 'mnm-games-best-scores'
 const modeStorageKey = 'mnm-games-mode'
@@ -125,6 +135,7 @@ let feedbackTime = 0
 let feedbackText = ''
 let feedbackKind: 'success' | 'miss' = 'success'
 let sceneTime = 0
+let effectParticles: EffectParticle[] = []
 
 modeElement.value = mode
 
@@ -226,8 +237,24 @@ function playSuccessSound() {
   window.setTimeout(() => playTone(784, 0.12), 140)
 }
 
-function triggerSuccessEffect() {
+function triggerSuccessEffect(x: number, y: number) {
   effectTime = 1
+  effectX = x
+  effectY = y
+  effectParticles = Array.from({ length: 24 }, (_, index) => {
+    const angle = (Math.PI * 2 * index) / 24 + Math.random() * 0.2
+    const speed = 1.8 + Math.random() * 2.8
+    return {
+      x,
+      y,
+      velocityX: Math.cos(angle) * speed,
+      velocityY: Math.sin(angle) * speed - 1.2,
+      life: 1,
+      size: 10 + Math.random() * 10,
+      symbol: index % 3 === 0 ? '♥' : index % 3 === 1 ? '✦' : '●',
+      color: index % 2 === 0 ? '#ffd75e' : '#f08bb3',
+    }
+  })
 }
 
 function showFeedback(text: string, kind: 'success' | 'miss') {
@@ -478,6 +505,19 @@ function drawScene() {
     context.globalAlpha = 1
   }
 
+  effectParticles = effectParticles.filter((particle) => particle.life > 0)
+  effectParticles.forEach((particle) => {
+    particle.x += particle.velocityX
+    particle.y += particle.velocityY
+    particle.velocityY += 0.06
+    particle.life -= 0.025
+    context.globalAlpha = Math.max(0, particle.life)
+    context.fillStyle = particle.color
+    context.font = `bold ${particle.size}px sans-serif`
+    context.fillText(particle.symbol, particle.x, particle.y)
+  })
+  context.globalAlpha = 1
+
   if (mode === 'story' && status !== 'finished') {
     const enemyX = Math.max(characterX + 75, width - 82)
     drawMonster(enemyX, height * 0.48)
@@ -596,6 +636,7 @@ function handleKeydown(event: KeyboardEvent) {
     }
     score += 1
     showFeedback('せいかい！', 'success')
+    triggerSuccessEffect(canvas.clientWidth * 0.18, canvas.clientHeight * 0.66)
     playSuccessSound()
     lessonIndex += 1
     if (lessonIndex === getLearningSteps().length) {
@@ -633,7 +674,7 @@ function handleKeydown(event: KeyboardEvent) {
     const height = canvas.clientHeight
     effectX = Math.min(width - 48, 48 + (score / getQuestions().length) * (width - 96))
     effectY = height * 0.66
-    triggerSuccessEffect()
+    triggerSuccessEffect(effectX, effectY)
     playSuccessSound()
     wordIndex += 1
     inputIndex = 0
