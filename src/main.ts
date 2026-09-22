@@ -1,10 +1,10 @@
 import './style.css'
+import { difficultySettings, type Difficulty } from './questions'
 
 type GameStatus = 'ready' | 'playing' | 'finished'
+type ScoreRecords = Partial<Record<Difficulty, number>>
 
-const words = ['さくら', 'りんご', 'でんしゃ', 'ほしぞら', 'たんけん']
-const romaji = ['sakura', 'ringo', 'densha', 'hoshizora', 'tanken']
-const gameLength = 60
+const scoreStorageKey = 'mnm-games-best-scores'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 const canvas = document.createElement('canvas')
@@ -27,6 +27,15 @@ app.innerHTML = `
     <div class="stage-wrap"></div>
     <section class="typing-panel" aria-live="polite">
       <p id="message" class="message">スタートをおして、ぼうけんに出よう！</p>
+      <div class="difficulty-choice">
+        <span>むずかしさ</span>
+        <select id="difficulty" aria-label="むずかしさを選ぶ">
+          <option value="easy">かんたん</option>
+          <option value="normal" selected>ふつう</option>
+          <option value="hard">むずかしい</option>
+        </select>
+        <span id="best-score" class="best-score">ベスト: 0もん</span>
+      </div>
       <div class="word-card">
         <p id="kana" class="kana">さくら</p>
         <p id="target" class="target">sakura</p>
@@ -46,15 +55,56 @@ const messageElement = document.querySelector<HTMLParagraphElement>('#message')!
 const kanaElement = document.querySelector<HTMLParagraphElement>('#kana')!
 const targetElement = document.querySelector<HTMLParagraphElement>('#target')!
 const startButton = document.querySelector<HTMLButtonElement>('#start')!
+const difficultyElement = document.querySelector<HTMLSelectElement>('#difficulty')!
+const bestScoreElement = document.querySelector<HTMLSpanElement>('#best-score')!
 
 let status: GameStatus = 'ready'
+let difficulty: Difficulty = 'normal'
 let wordIndex = 0
 let inputIndex = 0
 let score = 0
 let misses = 0
-let remaining = gameLength
+let remaining = difficultySettings[difficulty].time
 let lastFrame = 0
 let timer = 0
+let audioContext: AudioContext | undefined
+
+function getQuestions() {
+  return difficultySettings[difficulty].questions
+}
+
+function getScoreRecords(): ScoreRecords {
+  try {
+    return JSON.parse(localStorage.getItem(scoreStorageKey) ?? '{}') as ScoreRecords
+  } catch {
+    return {}
+  }
+}
+
+function updateBestScore() {
+  const best = getScoreRecords()[difficulty] ?? 0
+  bestScoreElement.textContent = `ベスト: ${best}もん`
+}
+
+function playTone(frequency: number, duration: number, type: OscillatorType = 'sine') {
+  audioContext ??= new AudioContext()
+  const oscillator = audioContext.createOscillator()
+  const gain = audioContext.createGain()
+  oscillator.type = type
+  oscillator.frequency.value = frequency
+  gain.gain.setValueAtTime(0.08, audioContext.currentTime)
+  gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration)
+  oscillator.connect(gain)
+  gain.connect(audioContext.destination)
+  oscillator.start()
+  oscillator.stop(audioContext.currentTime + duration)
+}
+
+function playClearSound() {
+  playTone(523, 0.12)
+  window.setTimeout(() => playTone(659, 0.12), 100)
+  window.setTimeout(() => playTone(784, 0.2), 200)
+}
 
 function resizeCanvas() {
   const scale = window.devicePixelRatio > 1 ? 1.5 : 1
@@ -66,7 +116,7 @@ function resizeCanvas() {
 function drawScene() {
   const width = canvas.clientWidth
   const height = canvas.clientHeight
-  const progress = score / words.length
+  const progress = score / getQuestions().length
 
   context.clearRect(0, 0, width, height)
   context.fillStyle = '#dff0e7'
@@ -106,8 +156,9 @@ function drawScene() {
 }
 
 function updateWord() {
-  kanaElement.textContent = words[wordIndex]
-  targetElement.innerHTML = romaji[wordIndex]
+  const question = getQuestions()[wordIndex]
+  kanaElement.textContent = question.kana
+  targetElement.innerHTML = question.romaji
     .split('')
     .map((letter, index) => `<span class="${index < inputIndex ? 'typed' : ''}">${letter}</span>`)
     .join('')
@@ -121,20 +172,35 @@ function updateStats() {
 
 function finishGame() {
   status = 'finished'
-  messageElement.textContent = `おしまい！ ${score}もん せいかいできたよ。`
+  const records = getScoreRecords()
+  const previousBest = records[difficulty] ?? 0
+  const isNewBest = score > previousBest
+  if (isNewBest) {
+    records[difficulty] = score
+    localStorage.setItem(scoreStorageKey, JSON.stringify(records))
+  }
+  messageElement.textContent = isNewBest
+    ? `おしまい！ ${score}もん。ベストきろく更新！`
+    : `おしまい！ ${score}もん せいかいできたよ。`
   startButton.textContent = 'もういちど遊ぶ'
   startButton.disabled = false
+  difficultyElement.disabled = false
+  playClearSound()
+  updateBestScore()
   updateStats()
 }
 
 function startGame() {
+  difficulty = difficultyElement.value as Difficulty
   status = 'playing'
   wordIndex = 0
   inputIndex = 0
   score = 0
   misses = 0
-  remaining = gameLength
+  remaining = difficultySettings[difficulty].time
+  lastFrame = performance.now()
   startButton.disabled = true
+  difficultyElement.disabled = true
   startButton.textContent = 'プレイ中'
   messageElement.textContent = 'ひらがなを見て、ローマ字を入力しよう！'
   updateWord()
@@ -144,20 +210,22 @@ function startGame() {
 function handleKeydown(event: KeyboardEvent) {
   if (status !== 'playing' || event.key.length !== 1 || !/^[a-zA-Z]$/.test(event.key)) return
 
-  const expected = romaji[wordIndex][inputIndex]
+  const expected = getQuestions()[wordIndex].romaji[inputIndex]
   if (event.key.toLowerCase() !== expected) {
     misses += 1
+    playTone(180, 0.12, 'square')
     messageElement.textContent = 'おしい！ つぎの文字を見てみよう'
     updateStats()
     return
   }
 
   inputIndex += 1
-  score += inputIndex === romaji[wordIndex].length ? 1 : 0
-  if (inputIndex === romaji[wordIndex].length) {
+  if (inputIndex === getQuestions()[wordIndex].romaji.length) {
+    score += 1
+    playTone(660, 0.08)
     wordIndex += 1
     inputIndex = 0
-    if (wordIndex === words.length) {
+    if (wordIndex === getQuestions().length) {
       finishGame()
       return
     }
@@ -180,9 +248,17 @@ function tick(now: number) {
 window.addEventListener('resize', resizeCanvas)
 window.addEventListener('keydown', handleKeydown)
 startButton.addEventListener('click', startGame)
+difficultyElement.addEventListener('change', () => {
+  if (status === 'playing') return
+  difficulty = difficultyElement.value as Difficulty
+  remaining = difficultySettings[difficulty].time
+  updateBestScore()
+  updateStats()
+})
 resizeCanvas()
 updateWord()
 updateStats()
+updateBestScore()
 timer = requestAnimationFrame(tick)
 
 window.addEventListener('beforeunload', () => cancelAnimationFrame(timer))

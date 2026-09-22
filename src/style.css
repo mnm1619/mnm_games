@@ -31,6 +31,10 @@ h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.7rem); line-height: 1.15; }
 
 .typing-panel { margin-top: -2px; padding: 28px 18px 34px; border: 3px solid #473b35; border-top: 0; border-radius: 0 0 22px 22px; background: #fffaf0; text-align: center; }
 .message { min-height: 1.6em; margin: 0 0 16px; color: #75655c; font-size: 0.95rem; }
+.difficulty-choice { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 9px; margin: 0 auto 18px; color: #75655c; font-size: 0.86rem; }
+.difficulty-choice select { padding: 7px 28px 7px 10px; border: 2px solid #e7d9bd; border-radius: 8px; color: #473b35; background: #fff; font: inherit; cursor: pointer; }
+.difficulty-choice select:disabled { color: #95877e; background: #f2ece0; cursor: default; }
+.best-score { color: #5aaf7d; font-weight: 700; }
 .word-card { width: min(100%, 520px); margin: 0 auto; padding: 15px 20px 20px; border: 2px solid #e7d9bd; border-radius: 14px; background: #fff; }
 .kana { margin: 0; color: #d96750; font-size: 1.35rem; font-weight: 700; }
 .target { margin: 4px 0 0; color: #473b35; font: 800 clamp(2.1rem, 7vw, 3.8rem) sans-serif; letter-spacing: 0.08em; }
