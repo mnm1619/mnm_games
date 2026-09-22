@@ -121,6 +121,9 @@ let audioContext: AudioContext | undefined
 let effectTime = 0
 let effectX = 0
 let effectY = 0
+let feedbackTime = 0
+let feedbackText = ''
+let feedbackKind: 'success' | 'miss' = 'success'
 
 modeElement.value = mode
 
@@ -224,6 +227,12 @@ function playSuccessSound() {
 
 function triggerSuccessEffect() {
   effectTime = 1
+}
+
+function showFeedback(text: string, kind: 'success' | 'miss') {
+  feedbackText = text
+  feedbackKind = kind
+  feedbackTime = 1
 }
 
 function resizeCanvas() {
@@ -430,6 +439,36 @@ function drawScene() {
   const characterY = height * 0.66
   drawHeroine(characterX, characterY)
 
+  if (feedbackTime > 0) {
+    feedbackTime = Math.max(0, feedbackTime - 0.04)
+    const feedbackX = Math.min(width - 82, characterX + 50)
+    const feedbackY = characterY - 58 - (1 - feedbackTime) * 12
+    context.globalAlpha = Math.min(1, feedbackTime * 2)
+    context.fillStyle = feedbackKind === 'success' ? '#fff3a8' : '#d9c9e7'
+    context.beginPath()
+    context.ellipse(feedbackX, feedbackY, 54, 22, 0, 0, Math.PI * 2)
+    context.fill()
+    context.beginPath()
+    context.moveTo(feedbackX - 18, feedbackY + 16)
+    context.lineTo(feedbackX - 29, feedbackY + 31)
+    context.lineTo(feedbackX - 4, feedbackY + 20)
+    context.fill()
+    context.fillStyle = '#5f4662'
+    context.font = 'bold 14px sans-serif'
+    context.textAlign = 'center'
+    context.fillText(feedbackText, feedbackX, feedbackY + 5)
+    context.textAlign = 'start'
+    if (feedbackKind === 'success') {
+      drawSparkle(feedbackX + 45, feedbackY - 17, 5, '#f0b64f')
+    } else {
+      context.fillStyle = '#8c73c9'
+      context.beginPath()
+      context.arc(feedbackX + 42, feedbackY - 15, 3, 0, Math.PI * 2)
+      context.fill()
+    }
+    context.globalAlpha = 1
+  }
+
   if (mode === 'story' && status !== 'finished') {
     const enemyX = Math.max(characterX + 75, width - 82)
     drawMonster(enemyX, height * 0.48)
@@ -540,12 +579,14 @@ function handleKeydown(event: KeyboardEvent) {
     const step = getLearningSteps()[lessonIndex]
     if (event.key.toLowerCase() !== step.key) {
       misses += 1
+      showFeedback('ざんねん…', 'miss')
       playTone(180, 0.12, 'square')
       messageElement.textContent = `${step.finger}で ${step.key.toUpperCase()} を押してみよう`
       updateStats()
       return
     }
     score += 1
+    showFeedback('せいかい！', 'success')
     playSuccessSound()
     lessonIndex += 1
     if (lessonIndex === getLearningSteps().length) {
@@ -560,6 +601,7 @@ function handleKeydown(event: KeyboardEvent) {
   const expected = getQuestions()[wordIndex].romaji[inputIndex]
   if (event.key.toLowerCase() !== expected) {
     misses += 1
+    showFeedback('ざんねん…', 'miss')
     playTone(180, 0.12, 'square')
     messageElement.textContent = mode === 'story'
       ? 'モモがそばにいるよ。ゆっくり、つぎの文字を見てみよう！'
@@ -569,6 +611,7 @@ function handleKeydown(event: KeyboardEvent) {
   }
 
   inputIndex += 1
+  showFeedback('せいかい！', 'success')
   if (inputIndex === getQuestions()[wordIndex].romaji.length) {
     score += 1
     if (mode === 'story') {
