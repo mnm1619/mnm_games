@@ -82,6 +82,7 @@ const startButton = document.querySelector<HTMLButtonElement>('#start')!
 const modeElement = document.querySelector<HTMLSelectElement>('#mode')!
 const difficultyElement = document.querySelector<HTMLSelectElement>('#difficulty')!
 const bestScoreElement = document.querySelector<HTMLSpanElement>('#best-score')!
+const storyProgressElement = document.querySelector<HTMLSpanElement>('#story-progress')!
 const learnGuide = document.querySelector<HTMLElement>('#learn-guide')!
 const lessonTitle = document.querySelector<HTMLParagraphElement>('#lesson-title')!
 const lessonFinger = document.querySelector<HTMLParagraphElement>('#lesson-finger')!
@@ -133,6 +134,18 @@ function getScoreRecords(): ScoreRecords {
 function updateBestScore() {
   const best = getScoreRecords()[difficulty] ?? 0
   bestScoreElement.textContent = `ベスト: ${best}もん`
+}
+
+function getStorySetting() {
+  if (difficulty === 'easy') return { chapter: '第1章 ほしの森', goal: 'モモと星のしずくを3つ集めよう！' }
+  if (difficulty === 'normal') return { chapter: '第2章 ひみつの木', goal: 'モモと森の小道を進もう！' }
+  return { chapter: '第3章 きらめきの夜空', goal: 'モモと星空の門をひらこう！' }
+}
+
+function updateStorySetting() {
+  const setting = getStorySetting()
+  storyProgressElement.textContent = setting.chapter
+  if (status !== 'playing' && mode === 'story') messageElement.textContent = setting.goal
 }
 
 function updateLearningView() {
@@ -200,58 +213,57 @@ function drawSparkle(x: number, y: number, size: number, color: string) {
 }
 
 function drawHeroine(x: number, y: number) {
-  context.fillStyle = '#6f4c86'
+  context.fillStyle = '#8d6657'
   context.beginPath()
-  context.arc(x, y - 17, 27, 0, Math.PI * 2)
+  context.ellipse(x, y - 14, 27, 31, 0, 0, Math.PI * 2)
   context.fill()
-  context.fillStyle = '#f8c9d8'
+  context.fillStyle = '#c4937b'
   context.beginPath()
-  context.moveTo(x - 25, y - 24)
-  context.quadraticCurveTo(x - 38, y - 4, x - 28, y + 14)
-  context.quadraticCurveTo(x - 18, y - 3, x - 16, y - 20)
-  context.moveTo(x + 25, y - 24)
-  context.quadraticCurveTo(x + 38, y - 4, x + 28, y + 14)
-  context.quadraticCurveTo(x + 18, y - 3, x + 16, y - 20)
+  context.moveTo(x - 22, y - 29)
+  context.quadraticCurveTo(x - 42, y - 53, x - 25, y - 58)
+  context.quadraticCurveTo(x - 10, y - 47, x - 10, y - 27)
+  context.moveTo(x + 22, y - 29)
+  context.quadraticCurveTo(x + 42, y - 53, x + 25, y - 58)
+  context.quadraticCurveTo(x + 10, y - 47, x + 10, y - 27)
   context.fill()
-  context.fillStyle = '#ffe7e5'
+  context.fillStyle = '#f4d7c8'
   context.beginPath()
-  context.arc(x, y - 14, 19, 0, Math.PI * 2)
+  context.ellipse(x, y - 13, 20, 22, 0, 0, Math.PI * 2)
   context.fill()
-  context.fillStyle = '#54405d'
+  context.fillStyle = '#473b35'
   context.beginPath()
-  context.arc(x - 7, y - 16, 5, 0, Math.PI * 2)
-  context.arc(x + 7, y - 16, 5, 0, Math.PI * 2)
+  context.ellipse(x - 8, y - 16, 5, 7, 0, 0, Math.PI * 2)
+  context.ellipse(x + 8, y - 16, 5, 7, 0, 0, Math.PI * 2)
   context.fill()
   context.fillStyle = '#fff'
   context.beginPath()
   context.arc(x - 5, y - 18, 2, 0, Math.PI * 2)
   context.arc(x + 9, y - 18, 2, 0, Math.PI * 2)
   context.fill()
-  context.strokeStyle = '#d986a3'
+  context.strokeStyle = '#9c5d65'
   context.lineWidth = 2
   context.beginPath()
   context.arc(x, y - 8, 6, 0.2, Math.PI - 0.2)
   context.stroke()
-  context.fillStyle = '#e9749a'
+  context.fillStyle = '#d87893'
   context.beginPath()
-  context.moveTo(x - 12, y - 41)
-  context.lineTo(x - 25, y - 51)
-  context.lineTo(x - 10, y - 49)
-  context.lineTo(x, y - 59)
-  context.lineTo(x + 10, y - 49)
-  context.lineTo(x + 25, y - 51)
-  context.lineTo(x + 12, y - 41)
+  context.moveTo(x - 13, y + 5)
+  context.quadraticCurveTo(x - 42, y + 3, x - 39, y + 26)
+  context.quadraticCurveTo(x - 20, y + 23, x - 7, y + 10)
+  context.moveTo(x + 13, y + 5)
+  context.quadraticCurveTo(x + 42, y + 3, x + 39, y + 26)
+  context.quadraticCurveTo(x + 20, y + 23, x + 7, y + 10)
   context.closePath()
   context.fill()
-  context.fillStyle = '#d9678c'
+  context.fillStyle = '#e9a8bc'
   context.beginPath()
-  context.moveTo(x - 15, y + 5)
-  context.lineTo(x + 15, y + 5)
-  context.lineTo(x + 10, y + 28)
-  context.lineTo(x - 10, y + 28)
+  context.moveTo(x - 15, y + 6)
+  context.lineTo(x + 15, y + 6)
+  context.lineTo(x + 10, y + 29)
+  context.lineTo(x - 10, y + 29)
   context.closePath()
   context.fill()
-  drawSparkle(x + 28, y - 37, 5, '#fff1a8')
+  drawSparkle(x + 30, y - 38, 5, '#fff1a8')
 }
 
 function drawMonster(x: number, y: number) {
@@ -371,7 +383,7 @@ function finishGame() {
     localStorage.setItem(scoreStorageKey, JSON.stringify(records))
   }
   messageElement.textContent = mode === 'story'
-    ? `第1章クリア！ ${score}体のモンスターを星の魔法で追いはらったよ。`
+    ? `${getStorySetting().chapter}クリア！ モモといっしょに${score}もんできたよ。`
     : isLearningMode()
       ? `${mode === 'learn-all' ? 'ぜんぶのキー' : 'ホームポジション'}の練習クリア！ 指の場所を覚えたね。`
       : isNewBest
@@ -412,6 +424,7 @@ function startGame() {
   if (mode === 'learn' && difficulty === 'easy') messageElement.textContent = '指をホームポジションに置いて、光るキーを押そう！'
   if (mode === 'learn' && difficulty === 'normal') messageElement.textContent = '全キーからランダムに出題！ 指を動かして押そう！'
   if (mode === 'learn-all') messageElement.textContent = 'ホームポジションから指を動かして、光るキーを押そう！'
+  if (mode === 'story') messageElement.textContent = getStorySetting().goal
   learnGuide.hidden = !isLearningMode()
   updateWord()
   updateStats()
@@ -445,7 +458,9 @@ function handleKeydown(event: KeyboardEvent) {
   if (event.key.toLowerCase() !== expected) {
     misses += 1
     playTone(180, 0.12, 'square')
-    messageElement.textContent = 'おしい！ つぎの文字を見てみよう'
+    messageElement.textContent = mode === 'story'
+      ? 'モモがそばにいるよ。ゆっくり、つぎの文字を見てみよう！'
+      : 'おしい！ つぎの文字を見てみよう'
     updateStats()
     return
   }
@@ -453,6 +468,12 @@ function handleKeydown(event: KeyboardEvent) {
   inputIndex += 1
   if (inputIndex === getQuestions()[wordIndex].romaji.length) {
     score += 1
+    if (mode === 'story') {
+      const left = getQuestions().length - score
+      messageElement.textContent = left > 0
+        ? `すごい！ モモが星を見つけたよ。あと${left}もん！`
+        : 'すごい！ モモとゴールへ進もう！'
+    }
     const width = canvas.clientWidth
     const height = canvas.clientHeight
     effectX = Math.min(width - 48, 48 + (score / getQuestions().length) * (width - 96))
@@ -496,6 +517,7 @@ modeElement.addEventListener('change', () => {
       : mode === 'learn-all'
         ? 'ぜんぶのキーを、指の使い方つきで覚えよう！'
       : '好きなだけ練習して、入力の力をつけよう！'
+  updateStorySetting()
   updateWord()
 })
 difficultyElement.addEventListener('change', () => {
@@ -506,11 +528,13 @@ difficultyElement.addEventListener('change', () => {
   updateWord()
   updateBestScore()
   updateStats()
+  updateStorySetting()
 })
 resizeCanvas()
 updateWord()
 updateStats()
 updateBestScore()
+updateStorySetting()
 drawScene()
 timer = requestAnimationFrame(tick)
 
