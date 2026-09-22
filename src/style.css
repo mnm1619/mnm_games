@@ -41,13 +41,15 @@ h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.7rem); line-height: 1.15; }
 .difficulty-choice select:disabled { color: #95877e; background: #f2ece0; cursor: default; }
 .best-score { color: #5aaf7d; font-weight: 700; }
 .word-card { width: min(100%, 520px); margin: 0 auto; padding: 15px 20px 20px; border: 2px solid #edd6e5; border-radius: 14px; background: #fff; }
-.learn-guide { width: min(100%, 560px); margin: 18px auto 0; padding: 14px; border: 2px solid #e4cce8; border-radius: 14px; background: #fff7fc; }
-.lesson-title { margin: 0; color: #8c5b9f; font-weight: 700; }
-.lesson-finger { margin: 4px 0 12px; color: #756078; font-size: 0.9rem; }
-.keyboard { display: grid; grid-template-columns: repeat(10, minmax(22px, 1fr)); gap: 5px; max-width: 440px; margin: 0 auto; }
-.keyboard span { display: grid; min-height: 32px; place-items: center; border: 1px solid #e4d5e6; border-radius: 6px; color: #806f83; background: #fff; font: 700 0.78rem sans-serif; }
+.learn-guide { width: min(100%, 780px); margin: 18px auto 0; padding: 18px; border: 3px solid #e4cce8; border-radius: 18px; background: #fff7fc; box-shadow: 0 6px 0 rgba(140, 91, 159, 0.12); }
+.lesson-title { margin: 0; color: #8c5b9f; font-size: 1.1rem; font-weight: 700; }
+.lesson-finger { margin: 4px 0 14px; color: #756078; font-size: 0.95rem; }
+.keyboard { display: grid; grid-template-columns: repeat(10, minmax(32px, 1fr)); gap: 7px; max-width: 720px; margin: 0 auto; }
+.keyboard span { display: grid; min-height: 52px; place-items: center; border: 2px solid #e4d5e6; border-radius: 9px; color: #806f83; background: #fff; font: 800 1.05rem sans-serif; box-shadow: 0 3px 0 #e4d5e6; transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease; }
 .keyboard span:nth-child(n + 11) { transform: translateX(12px); }
 .keyboard .home-key { border-color: #d86691; color: #fff; background: #d86691; box-shadow: 0 2px 0 #a94770; }
+.keyboard .key-success { border-color: #f0b64f; color: #fff; background: #f0b64f; box-shadow: 0 0 0 7px rgba(255, 215, 94, 0.35), 0 5px 0 #c98c2e; transform: translateY(-5px) scale(1.08); }
+.keyboard .key-miss { border-color: #8c73c9; color: #fff; background: #8c73c9; box-shadow: 0 0 0 7px rgba(140, 115, 201, 0.25), 0 3px 0 #654b9d; animation: key-shake 160ms ease-in-out 2; }
 .kana { margin: 0; color: #c85d87; font-size: 1.35rem; font-weight: 700; }
 .target { margin: 4px 0 0; color: #4f3d50; font: 800 clamp(2.1rem, 7vw, 3.8rem) sans-serif; letter-spacing: 0.08em; }
 .target span { color: #b8aa9e; }
@@ -63,4 +65,11 @@ h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.7rem); line-height: 1.15; }
   .stats { margin-top: 18px; }
   .stats div { flex: 1; }
   .scene { height: 230px; }
+  .keyboard { gap: 4px; }
+  .keyboard span { min-height: 42px; font-size: 0.82rem; }
+}
+
+@keyframes key-shake {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-5px); }
 }

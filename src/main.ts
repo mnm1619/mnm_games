@@ -76,7 +76,7 @@ app.innerHTML = `
         <p id="kana" class="kana">さくら</p>
         <p id="target" class="target">sakura</p>
       </div>
-      <section id="learn-guide" class="learn-guide" hidden>
+      <section id="learn-guide" class="learn-guide">
         <p id="lesson-title" class="lesson-title">ホームポジション</p>
         <p id="lesson-finger" class="lesson-finger">左手の小指を A に置こう</p>
         <div class="keyboard" aria-label="キーボードのホームポジション">
@@ -263,6 +263,15 @@ function showFeedback(text: string, kind: 'success' | 'miss') {
   feedbackText = text
   feedbackKind = kind
   feedbackTime = 1
+}
+
+function flashKeyboardKey(key: string, kind: 'success' | 'miss') {
+  const keyboardKey = document.querySelector<HTMLSpanElement>(`[data-key="${key}"]`)
+  if (!keyboardKey) return
+  keyboardKey.classList.remove('key-success', 'key-miss')
+  void keyboardKey.offsetWidth
+  keyboardKey.classList.add(kind === 'success' ? 'key-success' : 'key-miss')
+  window.setTimeout(() => keyboardKey.classList.remove('key-success', 'key-miss'), 420)
 }
 
 function resizeCanvas() {
@@ -516,15 +525,15 @@ function drawScene() {
     context.globalAlpha = Math.min(1, feedbackTime * 2)
     context.fillStyle = feedbackKind === 'success' ? '#fff3a8' : '#d9c9e7'
     context.beginPath()
-    context.ellipse(feedbackX, feedbackY, 54, 22, 0, 0, Math.PI * 2)
+    context.ellipse(feedbackX, feedbackY, 76, 30, 0, 0, Math.PI * 2)
     context.fill()
     context.beginPath()
-    context.moveTo(feedbackX - 18, feedbackY + 16)
-    context.lineTo(feedbackX - 29, feedbackY + 31)
-    context.lineTo(feedbackX - 4, feedbackY + 20)
+    context.moveTo(feedbackX - 24, feedbackY + 22)
+    context.lineTo(feedbackX - 40, feedbackY + 42)
+    context.lineTo(feedbackX - 5, feedbackY + 26)
     context.fill()
     context.fillStyle = '#5f4662'
-    context.font = 'bold 14px sans-serif'
+    context.font = 'bold 20px sans-serif'
     context.textAlign = 'center'
     context.fillText(feedbackText, feedbackX, feedbackY + 5)
     context.textAlign = 'start'
@@ -568,9 +577,9 @@ function drawScene() {
   if (effectTime > 0) {
     effectTime = Math.max(0, effectTime - 0.035)
     const effectProgress = 1 - effectTime
-    const radius = 18 + effectProgress * 46
+    const radius = 22 + effectProgress * 76
     context.strokeStyle = `rgba(255, 202, 76, ${effectTime})`
-    context.lineWidth = 5
+    context.lineWidth = 10
     context.beginPath()
     context.arc(effectX, effectY, radius, 0, Math.PI * 2)
     context.stroke()
@@ -579,7 +588,7 @@ function drawScene() {
       const sparkleX = effectX + Math.cos(angle) * radius
       const sparkleY = effectY + Math.sin(angle) * radius
       context.fillStyle = `rgba(255, 244, 174, ${effectTime})`
-      context.font = 'bold 22px sans-serif'
+      context.font = 'bold 30px sans-serif'
       context.fillText('✦', sparkleX - 8, sparkleY)
     }
   }
@@ -679,7 +688,7 @@ function startGame() {
   if (mode === 'learn' && difficulty === 'normal') messageElement.textContent = '全キーからランダムに出題！ 指を動かして押そう！'
   if (mode === 'learn-all') messageElement.textContent = 'ホームポジションから指を動かして、光るキーを押そう！'
   if (mode === 'story') messageElement.textContent = getStorySetting().goal
-  learnGuide.hidden = !isLearningMode()
+  learnGuide.hidden = false
   updateWord()
   updateStats()
 }
@@ -689,6 +698,7 @@ function handleKeydown(event: KeyboardEvent) {
 
   if (isLearningMode()) {
     const step = getLearningSteps()[lessonIndex]
+    flashKeyboardKey(event.key.toLowerCase(), event.key.toLowerCase() === step.key ? 'success' : 'miss')
     if (event.key.toLowerCase() !== step.key) {
       misses += 1
       showFeedback('ざんねん…', 'miss')
@@ -712,6 +722,7 @@ function handleKeydown(event: KeyboardEvent) {
   }
 
   const expected = getQuestions()[wordIndex].romaji[inputIndex]
+  flashKeyboardKey(event.key.toLowerCase(), event.key.toLowerCase() === expected ? 'success' : 'miss')
   if (event.key.toLowerCase() !== expected) {
     misses += 1
     showFeedback('ざんねん…', 'miss')
@@ -779,7 +790,7 @@ modeElement.addEventListener('change', () => {
   if (status === 'playing') return
   mode = modeElement.value as GameMode
   localStorage.setItem(modeStorageKey, mode)
-  learnGuide.hidden = !isLearningMode()
+  learnGuide.hidden = false
   messageElement.textContent = mode === 'story'
     ? '星の森を進んで、じゃまモンスターを追いはらおう！'
     : mode === 'learn'
