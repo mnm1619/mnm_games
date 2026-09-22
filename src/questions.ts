@@ -30,6 +30,22 @@ export const homePositionSteps: LearningStep[] = [
   { key: ';', finger: '右小指', title: '右手の小指', message: '右手の小指を ; に置こう' },
 ]
 
+const fingerByKey: Record<string, Finger> = {
+  q: '左小指', w: '左薬指', e: '左中指', r: '左人差し指', t: '左人差し指',
+  y: '右人差し指', u: '右人差し指', i: '右中指', o: '右薬指', p: '右小指',
+  a: '左小指', s: '左薬指', d: '左中指', f: '左人差し指', g: '左人差し指',
+  h: '右人差し指', j: '右人差し指', k: '右中指', l: '右薬指',
+  z: '左小指', x: '左薬指', c: '左中指', v: '左人差し指', b: '左人差し指',
+  n: '右人差し指', m: '右人差し指',
+}
+
+export const allKeySteps: LearningStep[] = Object.keys(fingerByKey).map((key) => ({
+  key,
+  finger: fingerByKey[key],
+  title: `${key.toUpperCase()} キーの練習`,
+  message: `${fingerByKey[key]}で ${key.toUpperCase()} を押してみよう`,
+}))
+
 export const difficultySettings: Record<Difficulty, DifficultySetting> = {
   easy: {
     label: 'かんたん',

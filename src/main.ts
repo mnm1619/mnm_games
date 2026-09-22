@@ -1,8 +1,8 @@
 import './style.css'
-import { difficultySettings, homePositionSteps, type Difficulty } from './questions'
+import { allKeySteps, difficultySettings, homePositionSteps, type Difficulty } from './questions'
 
 type GameStatus = 'ready' | 'playing' | 'finished'
-type GameMode = 'story' | 'practice' | 'learn'
+type GameMode = 'story' | 'practice' | 'learn' | 'learn-all'
 type ScoreRecords = Partial<Record<Difficulty, number>>
 
 const scoreStorageKey = 'mnm-games-best-scores'
@@ -35,6 +35,7 @@ app.innerHTML = `
           <option value="story">ストーリー</option>
           <option value="practice">れんしゅう</option>
           <option value="learn">まなぶ</option>
+          <option value="learn-all">ぜんぶのキー</option>
         </select>
         <span id="story-progress" class="story-progress">第1章 ほしの森</span>
       </div>
@@ -59,6 +60,8 @@ app.innerHTML = `
           <span data-key="y">Y</span><span data-key="u">U</span><span data-key="i">I</span><span data-key="o">O</span><span data-key="p">P</span>
           <span data-key="a">A</span><span data-key="s">S</span><span data-key="d">D</span><span data-key="f">F</span><span data-key="g">G</span>
           <span data-key="h">H</span><span data-key="j">J</span><span data-key="k">K</span><span data-key="l">L</span><span data-key=";">;</span>
+          <span data-key="z">Z</span><span data-key="x">X</span><span data-key="c">C</span><span data-key="v">V</span><span data-key="b">B</span>
+          <span data-key="n">N</span><span data-key="m">M</span>
         </div>
       </section>
       <p class="input-help">キーボードでローマ字を入力してね</p>
@@ -106,6 +109,14 @@ function getQuestions() {
   return difficultySettings[difficulty].questions
 }
 
+function isLearningMode() {
+  return mode === 'learn' || mode === 'learn-all'
+}
+
+function getLearningSteps() {
+  return mode === 'learn-all' ? allKeySteps : homePositionSteps
+}
+
 function getScoreRecords(): ScoreRecords {
   try {
     return JSON.parse(localStorage.getItem(scoreStorageKey) ?? '{}') as ScoreRecords
@@ -120,7 +131,7 @@ function updateBestScore() {
 }
 
 function updateLearningView() {
-  const step = homePositionSteps[lessonIndex]
+  const step = getLearningSteps()[lessonIndex]
   lessonTitle.textContent = step.title
   lessonFinger.textContent = step.message
   keyboardKeys.forEach((key) => {
@@ -327,7 +338,7 @@ function drawScene() {
 }
 
 function updateWord() {
-  if (mode === 'learn') {
+  if (isLearningMode()) {
     updateLearningView()
     return
   }
@@ -356,8 +367,8 @@ function finishGame() {
   }
   messageElement.textContent = mode === 'story'
     ? `第1章クリア！ ${score}体のモンスターを星の魔法で追いはらったよ。`
-    : mode === 'learn'
-      ? 'ホームポジションの第1章クリア！ 指の場所を覚えたね。'
+    : isLearningMode()
+      ? `${mode === 'learn-all' ? 'ぜんぶのキー' : 'ホームポジション'}の練習クリア！ 指の場所を覚えたね。`
       : isNewBest
         ? `おしまい！ ${score}もん。ベストきろく更新！`
         : `おしまい！ ${score}もん せいかいできたよ。`
@@ -381,7 +392,7 @@ function startGame() {
   inputIndex = 0
   score = 0
   misses = 0
-  remaining = mode === 'learn' ? 90 : difficultySettings[difficulty].time
+  remaining = isLearningMode() ? 180 : difficultySettings[difficulty].time
   lastFrame = performance.now()
   startButton.disabled = true
   modeElement.disabled = true
@@ -390,7 +401,8 @@ function startGame() {
   messageElement.textContent = 'ひらがなを見て、ローマ字を入力しよう！'
   if (mode === 'story') messageElement.textContent = '星の魔法で、じゃまモンスターを追いはらおう！'
   if (mode === 'learn') messageElement.textContent = '指をホームポジションに置いて、光るキーを押そう！'
-  learnGuide.hidden = mode !== 'learn'
+  if (mode === 'learn-all') messageElement.textContent = 'ホームポジションから指を動かして、光るキーを押そう！'
+  learnGuide.hidden = !isLearningMode()
   updateWord()
   updateStats()
 }
@@ -398,8 +410,8 @@ function startGame() {
 function handleKeydown(event: KeyboardEvent) {
   if (status !== 'playing' || event.key.length !== 1 || !/^[a-zA-Z;]$/.test(event.key)) return
 
-  if (mode === 'learn') {
-    const step = homePositionSteps[lessonIndex]
+  if (isLearningMode()) {
+    const step = getLearningSteps()[lessonIndex]
     if (event.key.toLowerCase() !== step.key) {
       misses += 1
       playTone(180, 0.12, 'square')
@@ -410,7 +422,7 @@ function handleKeydown(event: KeyboardEvent) {
     score += 1
     playSuccessSound()
     lessonIndex += 1
-    if (lessonIndex === homePositionSteps.length) {
+    if (lessonIndex === getLearningSteps().length) {
       finishGame()
       return
     }
@@ -466,11 +478,13 @@ modeElement.addEventListener('change', () => {
   if (status === 'playing') return
   mode = modeElement.value as GameMode
   localStorage.setItem(modeStorageKey, mode)
-  learnGuide.hidden = mode !== 'learn'
+  learnGuide.hidden = !isLearningMode()
   messageElement.textContent = mode === 'story'
     ? '星の森を進んで、じゃまモンスターを追いはらおう！'
     : mode === 'learn'
       ? 'ホームポジションから、指の使い方を覚えよう！'
+      : mode === 'learn-all'
+        ? 'ぜんぶのキーを、指の使い方つきで覚えよう！'
       : '好きなだけ練習して、入力の力をつけよう！'
   updateWord()
 })
