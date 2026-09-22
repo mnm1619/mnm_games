@@ -1,8 +1,8 @@
 import './style.css'
-import { difficultySettings, type Difficulty } from './questions'
+import { difficultySettings, homePositionSteps, type Difficulty } from './questions'
 
 type GameStatus = 'ready' | 'playing' | 'finished'
-type GameMode = 'story' | 'practice'
+type GameMode = 'story' | 'practice' | 'learn'
 type ScoreRecords = Partial<Record<Difficulty, number>>
 
 const scoreStorageKey = 'mnm-games-best-scores'
@@ -34,6 +34,7 @@ app.innerHTML = `
         <select id="mode" aria-label="あそびかたを選ぶ">
           <option value="story">ストーリー</option>
           <option value="practice">れんしゅう</option>
+          <option value="learn">まなぶ</option>
         </select>
         <span id="story-progress" class="story-progress">第1章 ほしの森</span>
       </div>
@@ -50,6 +51,16 @@ app.innerHTML = `
         <p id="kana" class="kana">さくら</p>
         <p id="target" class="target">sakura</p>
       </div>
+      <section id="learn-guide" class="learn-guide" hidden>
+        <p id="lesson-title" class="lesson-title">ホームポジション</p>
+        <p id="lesson-finger" class="lesson-finger">左手の小指を A に置こう</p>
+        <div class="keyboard" aria-label="キーボードのホームポジション">
+          <span data-key="q">Q</span><span data-key="w">W</span><span data-key="e">E</span><span data-key="r">R</span><span data-key="t">T</span>
+          <span data-key="y">Y</span><span data-key="u">U</span><span data-key="i">I</span><span data-key="o">O</span><span data-key="p">P</span>
+          <span data-key="a">A</span><span data-key="s">S</span><span data-key="d">D</span><span data-key="f">F</span><span data-key="g">G</span>
+          <span data-key="h">H</span><span data-key="j">J</span><span data-key="k">K</span><span data-key="l">L</span><span data-key=";">;</span>
+        </div>
+      </section>
       <p class="input-help">キーボードでローマ字を入力してね</p>
       <button id="start" class="start-button" type="button">スタート</button>
     </section>
@@ -68,11 +79,16 @@ const startButton = document.querySelector<HTMLButtonElement>('#start')!
 const modeElement = document.querySelector<HTMLSelectElement>('#mode')!
 const difficultyElement = document.querySelector<HTMLSelectElement>('#difficulty')!
 const bestScoreElement = document.querySelector<HTMLSpanElement>('#best-score')!
+const learnGuide = document.querySelector<HTMLElement>('#learn-guide')!
+const lessonTitle = document.querySelector<HTMLParagraphElement>('#lesson-title')!
+const lessonFinger = document.querySelector<HTMLParagraphElement>('#lesson-finger')!
+const keyboardKeys = document.querySelectorAll<HTMLSpanElement>('[data-key]')
 
 let status: GameStatus = 'ready'
 let mode: GameMode = (localStorage.getItem(modeStorageKey) as GameMode) || 'story'
 let difficulty: Difficulty = 'normal'
 let wordIndex = 0
+let lessonIndex = 0
 let inputIndex = 0
 let score = 0
 let misses = 0
@@ -101,6 +117,18 @@ function getScoreRecords(): ScoreRecords {
 function updateBestScore() {
   const best = getScoreRecords()[difficulty] ?? 0
   bestScoreElement.textContent = `ベスト: ${best}もん`
+}
+
+function updateLearningView() {
+  const step = homePositionSteps[lessonIndex]
+  lessonTitle.textContent = step.title
+  lessonFinger.textContent = step.message
+  keyboardKeys.forEach((key) => {
+    key.classList.toggle('home-key', key.dataset.key === step.key)
+  })
+  kanaElement.textContent = `つぎは ${step.key.toUpperCase()} キー`
+  targetElement.textContent = step.key.toUpperCase()
+  learnGuide.hidden = false
 }
 
 function playTone(frequency: number, duration: number, type: OscillatorType = 'sine') {
@@ -140,23 +168,122 @@ function resizeCanvas() {
   context.setTransform(scale, 0, 0, scale, 0, 0)
 }
 
+function drawSparkle(x: number, y: number, size: number, color: string) {
+  context.fillStyle = color
+  context.beginPath()
+  context.moveTo(x, y - size)
+  context.lineTo(x + size * 0.28, y - size * 0.28)
+  context.lineTo(x + size, y)
+  context.lineTo(x + size * 0.28, y + size * 0.28)
+  context.lineTo(x, y + size)
+  context.lineTo(x - size * 0.28, y + size * 0.28)
+  context.lineTo(x - size, y)
+  context.lineTo(x - size * 0.28, y - size * 0.28)
+  context.closePath()
+  context.fill()
+}
+
+function drawHeroine(x: number, y: number) {
+  context.fillStyle = '#6f4c86'
+  context.beginPath()
+  context.arc(x, y - 17, 27, 0, Math.PI * 2)
+  context.fill()
+  context.fillStyle = '#f8c9d8'
+  context.beginPath()
+  context.moveTo(x - 25, y - 24)
+  context.quadraticCurveTo(x - 38, y - 4, x - 28, y + 14)
+  context.quadraticCurveTo(x - 18, y - 3, x - 16, y - 20)
+  context.moveTo(x + 25, y - 24)
+  context.quadraticCurveTo(x + 38, y - 4, x + 28, y + 14)
+  context.quadraticCurveTo(x + 18, y - 3, x + 16, y - 20)
+  context.fill()
+  context.fillStyle = '#ffe7e5'
+  context.beginPath()
+  context.arc(x, y - 14, 19, 0, Math.PI * 2)
+  context.fill()
+  context.fillStyle = '#54405d'
+  context.beginPath()
+  context.arc(x - 7, y - 16, 5, 0, Math.PI * 2)
+  context.arc(x + 7, y - 16, 5, 0, Math.PI * 2)
+  context.fill()
+  context.fillStyle = '#fff'
+  context.beginPath()
+  context.arc(x - 5, y - 18, 2, 0, Math.PI * 2)
+  context.arc(x + 9, y - 18, 2, 0, Math.PI * 2)
+  context.fill()
+  context.strokeStyle = '#d986a3'
+  context.lineWidth = 2
+  context.beginPath()
+  context.arc(x, y - 8, 6, 0.2, Math.PI - 0.2)
+  context.stroke()
+  context.fillStyle = '#e9749a'
+  context.beginPath()
+  context.moveTo(x - 12, y - 41)
+  context.lineTo(x - 25, y - 51)
+  context.lineTo(x - 10, y - 49)
+  context.lineTo(x, y - 59)
+  context.lineTo(x + 10, y - 49)
+  context.lineTo(x + 25, y - 51)
+  context.lineTo(x + 12, y - 41)
+  context.closePath()
+  context.fill()
+  context.fillStyle = '#d9678c'
+  context.beginPath()
+  context.moveTo(x - 15, y + 5)
+  context.lineTo(x + 15, y + 5)
+  context.lineTo(x + 10, y + 28)
+  context.lineTo(x - 10, y + 28)
+  context.closePath()
+  context.fill()
+  drawSparkle(x + 28, y - 37, 5, '#fff1a8')
+}
+
+function drawMonster(x: number, y: number) {
+  context.fillStyle = '#9a76c6'
+  context.beginPath()
+  context.moveTo(x - 23, y + 20)
+  context.quadraticCurveTo(x - 31, y - 10, x - 19, y - 22)
+  context.lineTo(x - 9, y - 35)
+  context.lineTo(x, y - 23)
+  context.lineTo(x + 11, y - 35)
+  context.lineTo(x + 20, y - 22)
+  context.quadraticCurveTo(x + 31, y - 8, x + 23, y + 20)
+  context.quadraticCurveTo(x, y + 31, x - 23, y + 20)
+  context.fill()
+  context.fillStyle = '#fff4fa'
+  context.beginPath()
+  context.ellipse(x - 9, y - 5, 6, 9, 0, 0, Math.PI * 2)
+  context.ellipse(x + 9, y - 5, 6, 9, 0, 0, Math.PI * 2)
+  context.fill()
+  context.fillStyle = '#473b35'
+  context.beginPath()
+  context.arc(x - 9, y - 3, 3, 0, Math.PI * 2)
+  context.arc(x + 9, y - 3, 3, 0, Math.PI * 2)
+  context.fill()
+  context.strokeStyle = '#473b35'
+  context.lineWidth = 2
+  context.beginPath()
+  context.arc(x, y + 7, 7, 0.2, Math.PI - 0.2)
+  context.stroke()
+}
+
 function drawScene() {
   const width = canvas.clientWidth
   const height = canvas.clientHeight
   const progress = score / getQuestions().length
 
   context.clearRect(0, 0, width, height)
-  context.fillStyle = '#dff0e7'
+  context.fillStyle = '#f9e8f0'
   context.fillRect(0, 0, width, height)
-  context.fillStyle = '#bddfcf'
+  context.fillStyle = '#ead8ee'
   context.beginPath()
   context.arc(width * 0.16, height * 0.58, 90, Math.PI, 0)
   context.arc(width * 0.42, height * 0.58, 120, Math.PI, 0)
   context.arc(width * 0.78, height * 0.58, 150, Math.PI, 0)
   context.fill()
-  context.fillStyle = '#f7d77f'
+  context.fillStyle = '#f8dce5'
   context.fillRect(0, height * 0.72, width, height * 0.28)
-  context.strokeStyle = '#cf9d4c'
+  context.strokeStyle = '#d89db9'
   context.lineWidth = 4
   context.beginPath()
   context.moveTo(0, height * 0.78)
@@ -165,35 +292,18 @@ function drawScene() {
   context.stroke()
 
   const characterX = Math.min(width - 48, 48 + progress * (width - 96))
+  for (let index = 0; index < 5; index += 1) {
+    const petalX = width * (0.12 + index * 0.2)
+    const petalY = height * (0.18 + (index % 2) * 0.12)
+    drawSparkle(petalX, petalY, 4 + (index % 2) * 2, '#fff7fc')
+  }
+
   const characterY = height * 0.66
-  context.fillStyle = '#ef6c57'
-  context.beginPath()
-  context.arc(characterX, characterY, 22, 0, Math.PI * 2)
-  context.fill()
-  context.fillStyle = '#fffaf0'
-  context.beginPath()
-  context.arc(characterX - 8, characterY - 4, 4, 0, Math.PI * 2)
-  context.arc(characterX + 8, characterY - 4, 4, 0, Math.PI * 2)
-  context.fill()
-  context.strokeStyle = '#473b35'
-  context.lineWidth = 3
-  context.beginPath()
-  context.arc(characterX, characterY + 2, 9, 0.15, Math.PI - 0.15)
-  context.stroke()
+  drawHeroine(characterX, characterY)
 
   if (mode === 'story' && status !== 'finished') {
     const enemyX = Math.max(characterX + 75, width - 82)
-    context.fillStyle = '#8c73c9'
-    context.beginPath()
-    context.arc(enemyX, height * 0.48, 24, 0, Math.PI * 2)
-    context.fill()
-    context.fillStyle = '#fffaf0'
-    context.beginPath()
-    context.arc(enemyX - 8, height * 0.45, 5, 0, Math.PI * 2)
-    context.arc(enemyX + 8, height * 0.45, 5, 0, Math.PI * 2)
-    context.fill()
-    context.fillStyle = '#473b35'
-    context.fillRect(enemyX - 10, height * 0.53, 20, 4)
+    drawMonster(enemyX, height * 0.48)
   }
 
   if (effectTime > 0) {
@@ -217,6 +327,10 @@ function drawScene() {
 }
 
 function updateWord() {
+  if (mode === 'learn') {
+    updateLearningView()
+    return
+  }
   const question = getQuestions()[wordIndex]
   kanaElement.textContent = question.kana
   targetElement.innerHTML = question.romaji
@@ -242,9 +356,11 @@ function finishGame() {
   }
   messageElement.textContent = mode === 'story'
     ? `第1章クリア！ ${score}体のモンスターを星の魔法で追いはらったよ。`
-    : isNewBest
-      ? `おしまい！ ${score}もん。ベストきろく更新！`
-      : `おしまい！ ${score}もん せいかいできたよ。`
+    : mode === 'learn'
+      ? 'ホームポジションの第1章クリア！ 指の場所を覚えたね。'
+      : isNewBest
+        ? `おしまい！ ${score}もん。ベストきろく更新！`
+        : `おしまい！ ${score}もん せいかいできたよ。`
   startButton.textContent = 'もういちど遊ぶ'
   startButton.disabled = false
   modeElement.disabled = false
@@ -261,10 +377,11 @@ function startGame() {
   void audioContext.resume()
   status = 'playing'
   wordIndex = 0
+  lessonIndex = 0
   inputIndex = 0
   score = 0
   misses = 0
-  remaining = difficultySettings[difficulty].time
+  remaining = mode === 'learn' ? 90 : difficultySettings[difficulty].time
   lastFrame = performance.now()
   startButton.disabled = true
   modeElement.disabled = true
@@ -272,12 +389,35 @@ function startGame() {
   startButton.textContent = 'プレイ中'
   messageElement.textContent = 'ひらがなを見て、ローマ字を入力しよう！'
   if (mode === 'story') messageElement.textContent = '星の魔法で、じゃまモンスターを追いはらおう！'
+  if (mode === 'learn') messageElement.textContent = '指をホームポジションに置いて、光るキーを押そう！'
+  learnGuide.hidden = mode !== 'learn'
   updateWord()
   updateStats()
 }
 
 function handleKeydown(event: KeyboardEvent) {
-  if (status !== 'playing' || event.key.length !== 1 || !/^[a-zA-Z]$/.test(event.key)) return
+  if (status !== 'playing' || event.key.length !== 1 || !/^[a-zA-Z;]$/.test(event.key)) return
+
+  if (mode === 'learn') {
+    const step = homePositionSteps[lessonIndex]
+    if (event.key.toLowerCase() !== step.key) {
+      misses += 1
+      playTone(180, 0.12, 'square')
+      messageElement.textContent = `${step.finger}で ${step.key.toUpperCase()} を押してみよう`
+      updateStats()
+      return
+    }
+    score += 1
+    playSuccessSound()
+    lessonIndex += 1
+    if (lessonIndex === homePositionSteps.length) {
+      finishGame()
+      return
+    }
+    updateLearningView()
+    updateStats()
+    return
+  }
 
   const expected = getQuestions()[wordIndex].romaji[inputIndex]
   if (event.key.toLowerCase() !== expected) {
@@ -326,9 +466,13 @@ modeElement.addEventListener('change', () => {
   if (status === 'playing') return
   mode = modeElement.value as GameMode
   localStorage.setItem(modeStorageKey, mode)
+  learnGuide.hidden = mode !== 'learn'
   messageElement.textContent = mode === 'story'
     ? '星の森を進んで、じゃまモンスターを追いはらおう！'
-    : '好きなだけ練習して、入力の力をつけよう！'
+    : mode === 'learn'
+      ? 'ホームポジションから、指の使い方を覚えよう！'
+      : '好きなだけ練習して、入力の力をつけよう！'
+  updateWord()
 })
 difficultyElement.addEventListener('change', () => {
   if (status === 'playing') return
@@ -341,6 +485,7 @@ resizeCanvas()
 updateWord()
 updateStats()
 updateBestScore()
+drawScene()
 timer = requestAnimationFrame(tick)
 
 window.addEventListener('beforeunload', () => cancelAnimationFrame(timer))
