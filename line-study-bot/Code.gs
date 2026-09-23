@@ -4,6 +4,10 @@ const CONFIG = {
   tokenProperty: 'LINE_CHANNEL_ACCESS_TOKEN',
 }
 
+function doGet() {
+  return ContentService.createTextOutput('OK')
+}
+
 function doPost(event) {
   const body = JSON.parse(event.postData.contents)
   body.events.forEach(handleEvent)
