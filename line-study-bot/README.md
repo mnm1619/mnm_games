@@ -35,3 +35,9 @@
 LINEで「登録」と送ると、`Users`に利用者が追加されます。問題の`date`は`yyyy-MM-dd`形式で入力してください。
 
 アクセストークンはGitHubへ保存しないでください。子ども本人ではなく、保護者のLINEアカウントで登録・管理する運用を推奨します。
+
+## Verifyが302になる場合
+
+Apps ScriptのウェブアプリURLは、ブラウザではリダイレクトが追従されますが、LINEのVerifyでは302として失敗することがあります。その場合は`cloudflare-worker.js`をCloudflare Workersにデプロイし、環境変数`APPS_SCRIPT_URL`にApps Scriptの`/exec` URLを設定してください。LINEのWebhook URLにはWorkerのURLを登録します。
+
+Cloudflare Workersの無料枠で利用できます。WorkerはApps Scriptへのリダイレクトを追従し、LINEには応答を返します。Apps Script側は最新コードを保存して再デプロイしてください。

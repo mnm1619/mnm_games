@@ -9,8 +9,11 @@ function doGet() {
 }
 
 function doPost(event) {
-  const body = JSON.parse(event.postData.contents)
-  body.events.forEach(handleEvent)
+  const contents = event.postData?.contents
+  if (!contents) return ContentService.createTextOutput('OK')
+
+  const body = JSON.parse(contents)
+  body.events?.forEach(handleEvent)
   return ContentService.createTextOutput('OK')
 }
 
